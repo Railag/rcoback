@@ -1,7 +1,7 @@
 class UserController < ApplicationController
   include BCrypt
 
-  protect_from_forgery except: :create
+  protect_from_forgery except: [:create, :login, :startup_login]
 
   before_action :generate_authentication_token, only: :create
   before_action :encrypt_password, only: :create
@@ -15,23 +15,54 @@ class UserController < ApplicationController
   def create
     @new_user = User.create(permitted_params)
 
-    render json: @new_user.as_json(:only => [:login, :token])
+    render json: user_response(@new_user)
+  end
+
+  def login #password
+    if params[:password].blank?
+      render json: "{'error': 'not_found'}"
+    end
+
+    @user = User.find_by(password: pass(params[:password]))
+
+    render json: user_response(@user)
+  end
+
+  def startup_login # token
+    if params[:token].blank?
+      render json: "{'error': 'not_found'}"
+    end
+
+    @user = User.find_by(token: params[:token])
+
+    render json: user_response(@user)
   end
 
   private
-  def encrypt_password
-      params[:user][:password] = Password.create(params[:user][:password]).to_str
+  def user_response(user)
+    user.as_json(:only => [:login, :token, :email])
   end
 
   private
   def permitted_params
-    params.require(:user).permit(:login, :password, :email, :token)
+    params.permit(:login, :password, :email, :token)
   end
 
+  private
+  def encrypt_password
+    params[:password] = Password.create(params[:password]).to_str
+  end
+
+  private
+  def pass(pass)
+    Password.create(pass).to_str
+  end
+
+  private
   def generate_authentication_token
     loop do
-      params[:user][:token] = SecureRandom.base64(64)
-      break unless User.find_by(token: params[:user][:token])
+      params[:token] = SecureRandom.base64(64)
+      break unless User.find_by(token: params[:token])
     end
   end
 

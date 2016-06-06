@@ -5,6 +5,8 @@ Rails.application.routes.draw do
     get '/get', action: 'get'
     get '/', action: 'index'
     get '/:id', action: 'show'
+    post '/login', action: 'login'
+    post '/startup_login', action: 'startup_login'
     post '/', action: 'create'
     put '/:id', action: 'update'
     delete '/:id', action: 'destroy'
