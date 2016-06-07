@@ -17,7 +17,7 @@ class GroupController < ApplicationController
     if @groups.blank?
       render json: t(:group_fetch_error)
     else
-      render json: @groups
+      render json: group_response(@groups)
     end
   end
 
