@@ -5,6 +5,7 @@ Rails.application.routes.draw do
   scope '/group', controller: 'group' do
     get '/get', action: 'get'
     post '/fetch', action: 'fetch'
+    post '/add_user', action: 'add_user'
     post '/', action: 'create'
     put '/:id', action: 'update'
     delete '/:id', action: 'destroy'
