@@ -13,34 +13,47 @@ class UserController < ApplicationController
   end
 
   def create
-    @new_user = User.create(permitted_params)
-
-    render json: user_response(@new_user)
+    begin
+      @new_user = User.create(permitted_params)
+      render json: user_response(@new_user)
+    rescue ActiveRecord::RecordNotUnique
+      render json: t(:user_login_exists_error)
+    end
   end
 
   def login #password
     if params[:password].blank?
-      render json: "{'error': 'not_found'}"
+      render json: t(:user_login_not_found_error)
+      return
     end
 
     @user = User.find_by(password: pass(params[:password]))
 
-    render json: user_response(@user)
+    if @user.blank?
+      render json: t(:user_login_not_found_error)
+    else
+      render json: user_response(@user)
+    end
   end
 
   def startup_login # token
     if params[:token].blank?
-      render json: "{'error': 'not_found'}"
+      render json: t(:user_login_not_found_error)
+      return
     end
 
     @user = User.find_by(token: params[:token])
 
-    render json: user_response(@user)
+    if @user.blank?
+      render json: t(:user_login_not_found_error)
+    else
+      render json: user_response(@user)
+    end
   end
 
   private
   def user_response(user)
-    user.as_json(:only => [:login, :token, :email])
+    user.as_json(:only => [:id, :idd, :login, :token, :email])
   end
 
   private

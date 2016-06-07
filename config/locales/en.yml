@@ -21,3 +21,7 @@
 
 en:
   hello: "Hello world"
+  user_login_exists_error: '{"error":"User already exists"}'
+  user_login_not_found_error: '{"error":"Wrong login/password combination"}'
+  group_create_exists: "Group already exists"
+  group_fetch_error: "Cannot fetch groups"
