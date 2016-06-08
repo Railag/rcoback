@@ -20,9 +20,9 @@
 # available at http://guides.rubyonrails.org/i18n.html.
 
 en:
-  hello: "Hello world"
   user_login_exists_error: '{"error":"User already exists"}'
   user_login_not_found_error: '{"error":"Wrong login/password combination"}'
-  group_create_exists: "Group already exists"
-  group_fetch_error: "Cannot fetch groups"
-  group_add_user_success: "User was successfully added to group"
+  group_create_exists: '{"error":"Group already exists"}'
+  group_fetch_error: '{"error":"Cannot fetch groups"}'
+  group_add_user_success: '{"error":"User was successfully added to group"}'
+  group_add_user_error: '{"error":"User already in group"}'

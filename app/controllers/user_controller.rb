@@ -7,15 +7,15 @@ class UserController < ApplicationController
   before_action :encrypt_password, only: :create
 
   def get
-    @users = User.all
+    users = User.all
 
-    render json: @users
+    render json: users
   end
 
   def create
     begin
-      @new_user = User.create(permitted_params)
-      render json: user_response(@new_user)
+      new_user = User.create(permitted_params)
+      render json: user_response(new_user)
     rescue ActiveRecord::RecordNotUnique
       render json: t(:user_login_exists_error)
     end
@@ -27,12 +27,12 @@ class UserController < ApplicationController
       return
     end
 
-    @user = User.find_by(password: pass(params[:password]))
+    user = User.find_by(password: pass(params[:password]))
 
-    if @user.blank?
+    if user.blank?
       render json: t(:user_login_not_found_error)
     else
-      render json: user_response(@user)
+      render json: user_response(user)
     end
   end
 
@@ -42,12 +42,12 @@ class UserController < ApplicationController
       return
     end
 
-    @user = User.find_by(token: params[:token])
+    user = User.find_by(token: params[:token])
 
-    if @user.blank?
+    if user.blank?
       render json: t(:user_login_not_found_error)
     else
-      render json: user_response(@user)
+      render json: user_response(user)
     end
   end
 

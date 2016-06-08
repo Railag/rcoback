@@ -1,42 +1,78 @@
 class GroupController < ApplicationController
-  protect_from_forgery except: [:create, :fetch]
+  protect_from_forgery except: [:create, :fetch, :fetch_users, :fetch_messages]
 
   def create
     begin
-      @new_group = Group.create(permitted_params)
+      new_group = Group.create(permitted_params)
 
-      render json: group_response(@new_group)
+      render json: group_response(new_group)
     rescue ActiveRecord::RecordNotUnique
       render json: t(:group_create_exists)
     end
   end
 
   def fetch
-    @groups = Group.where(creator: permitted_params[:creator])
+    groups = Group.where(user_id: permitted_params[:creator])
 
-    if @groups.blank?
+    if groups.blank?
       render json: t(:group_fetch_error)
     else
-      render json: group_response(@groups)
+      render json: group_response(groups)
     end
   end
 
   def add_user
+    group_id = params_for_add_user_to_group[:group_id]
+    group = Group.find_by(id: group_id)
 
-    @user = User.find_by(login: params_for_add_user_to_group[:user_login_or_email])
+    login = params_for_add_user_to_group[:user_login_or_email]
+    user = User.find_by(login: login)
 
-    @group = Group.find_by(id: params_for_add_user_to_group[:group_id])
-
-    @group.users.create(@user)
+    existing_user = GroupUser.find_by(user_id: user.id, group_id: group_id)
+    if existing_user.blank?
+      group_user = GroupUser.create(user_id: user.id, group_id: group_id)
+      group.group_users << group_user
+      render json: t(:group_add_user_success)
+    else
+      render json: t(:group_add_user_error)
+    end
 
     # TODO create PN and send email for this user with join/reject options for invitation
+  end
 
-    render json: t(:group_add_user_success)
+  def fetch_users
+    group = Group.find_by(id: params[:group_id])
+
+    group_users = group.group_users
+
+    users = []
+
+    group_users.each do |gu|
+      users << User.find_by(id: gu.user_id)
+    end
+
+    render json: users.as_json(:only => [:id, :login])
+
+  end
+
+  def fetch_messages
+    group = Group.find_by(id: params[:group_id])
+
+    group_messages = group.messages
+
+    json = []
+
+    group_messages.each do |gm|
+      user << User.find_by(id: gm.user_id)
+      json << {group_id: group.id, user_id: user.id, user_login: user.login, user_image_url: user.login, message: gm.text, date: gm.created_at } # TODO image url
+    end
+
+    render json: json
   end
 
   private
   def group_response(group)
-    group.as_json(:only => [:id, :title, :creator])
+    group.as_json(:only => [:id, :title, :user_id])
   end
 
   private
