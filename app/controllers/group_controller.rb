@@ -1,5 +1,5 @@
 class GroupController < ApplicationController
-  protect_from_forgery except: [:create, :fetch, :fetch_users, :fetch_messages]
+  protect_from_forgery except: [:create, :fetch, :fetch_users, :fetch_messages, :send_message]
 
   def create
     begin
@@ -63,11 +63,27 @@ class GroupController < ApplicationController
     json = []
 
     group_messages.each do |gm|
-      user << User.find_by(id: gm.user_id)
-      json << {group_id: group.id, user_id: user.id, user_login: user.login, user_image_url: user.login, message: gm.text, date: gm.created_at } # TODO image url
+      user = User.find_by(id: gm.user_id)
+      json << {group_id: group.id, user_id: user.id, user_login: user.login, user_image_url: user.login, message: gm.text, date: gm.created_at} # TODO image url
     end
 
     render json: json
+  end
+
+  def send_message
+    # TODO check if user is member of group
+
+    message = Message.create(message_params)
+
+    group = Group.find_by(id: params[:group_id])
+
+    group.messages << message
+
+    render json: t(:group_send_message_success)
+  end
+
+  def message_params
+    params.permit(:group_id, :user_id, :text)
   end
 
   private

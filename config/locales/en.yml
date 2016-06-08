@@ -26,3 +26,4 @@ en:
   group_fetch_error: '{"error":"Cannot fetch groups"}'
   group_add_user_success: '{"error":"User was successfully added to group"}'
   group_add_user_error: '{"error":"User already in group"}'
+  group_send_message_success: '{"result":"Message sent successfully"}'

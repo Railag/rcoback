@@ -7,6 +7,7 @@ Rails.application.routes.draw do
     post '/fetch', action: 'fetch'
     post '/fetch_users', action: 'fetch_users'
     post '/fetch_messages', action: 'fetch_messages'
+    post '/send_message', action: 'send_message'
     post '/add_user', action: 'add_user'
     post '/', action: 'create'
     put '/:id', action: 'update'
