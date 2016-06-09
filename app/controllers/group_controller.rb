@@ -22,11 +22,16 @@ class GroupController < ApplicationController
   end
 
   def add_user
-    group_id = params_for_add_user_to_group[:group_id]
+    group_id = params_for_add_user[:group_id]
     group = Group.find_by(id: group_id)
 
-    login = params_for_add_user_to_group[:user_login_or_email]
+    login = params_for_add_user[:user_login_or_email]
     user = User.find_by(login: login)
+
+    if user.blank? # TODO add email user search
+      render json: t(:group_add_user_no_user)
+      return
+    end
 
     existing_user = GroupUser.find_by(user_id: user.id, group_id: group_id)
     if existing_user.blank?
@@ -35,6 +40,29 @@ class GroupController < ApplicationController
       render json: t(:group_add_user_success)
     else
       render json: t(:group_add_user_error)
+    end
+
+    # TODO create PN and send email for this user with join/reject options for invitation
+  end
+
+  def remove_user
+    group_id = params_for_remove_user[:group_id]
+
+    login = params_for_remove_user[:login]
+    if login.blank?
+      render json: t(:group_add_user_no_user)
+      return
+    end
+
+    user = User.find_by(login: login)
+
+    existing_user = GroupUser.find_by(user_id: user.id, group_id: group_id)
+    if existing_user.present?
+      group_user = GroupUser.find_by(user_id: user.id, group_id: group_id)
+      group_user.destroy
+      render json: t(:group_remove_user_success)
+    else
+      render json: t(:group_remove_user_error)
     end
 
     # TODO create PN and send email for this user with join/reject options for invitation
@@ -97,8 +125,13 @@ class GroupController < ApplicationController
   end
 
   private
-  def params_for_add_user_to_group
+  def params_for_add_user
     params.permit(:user_login_or_email, :group_id)
+  end
+
+  private
+  def params_for_remove_user
+    params.permit(:login, :group_id)
   end
 
 end

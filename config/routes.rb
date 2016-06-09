@@ -9,6 +9,7 @@ Rails.application.routes.draw do
     post '/fetch_messages', action: 'fetch_messages'
     post '/send_message', action: 'send_message'
     post '/add_user', action: 'add_user'
+    post '/remove_user', action: 'remove_user'
     post '/', action: 'create'
     put '/:id', action: 'update'
     delete '/:id', action: 'destroy'
