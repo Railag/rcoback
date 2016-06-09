@@ -53,8 +53,14 @@ GEM
     debug_inspector (0.0.2)
     erubis (2.7.0)
     execjs (2.7.0)
+    gcm (0.1.1)
+      httparty
+      json
     globalid (0.3.6)
       activesupport (>= 4.1.0)
+    httparty (0.13.7)
+      json (~> 1.8)
+      multi_xml (>= 0.5.2)
     i18n (0.7.0)
     jbuilder (2.5.0)
       activesupport (>= 3.0.0, < 5.1)
@@ -75,6 +81,7 @@ GEM
     mini_portile2 (2.0.0)
     minitest (5.9.0)
     multi_json (1.12.1)
+    multi_xml (0.5.5)
     mysql2 (0.4.4-x64-mingw32)
     nio4r (1.2.1)
     nokogiri (1.6.7.2-x64-mingw32)
@@ -152,6 +159,7 @@ DEPENDENCIES
   bcrypt (~> 3.1.7)
   byebug
   coffee-rails (~> 4.1.0)
+  gcm (~> 0.1.1)
   jbuilder (~> 2.0)
   jquery-rails
   mysql2 (>= 0.3.18, < 0.5)
