@@ -30,3 +30,6 @@ en:
   group_send_message_success: '{"result":"Message sent successfully"}'
   group_remove_user_success: '{"result":"User was successfully removed from group"}'
   group_remove_user_error: '{"error":"No such user in group"}'
+  user_fcm_token_success: '{"result":"Token saved successfully"}'
+  user_fcm_token_error: '{"error":"No user found for this token"}'
+  pn_send_success: '{"result":"Notification sent"}'

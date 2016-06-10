@@ -19,6 +19,8 @@ Rails.application.routes.draw do
     get '/get', action: 'get'
     post '/login', action: 'login'
     post '/startup_login', action: 'startup_login'
+    post '/fcm_token', action: 'fcm_token'
+    post '/send_pn', action: 'send_pn'
     post '/', action: 'create'
     put '/:id', action: 'update'
     delete '/:id', action: 'destroy'

@@ -42,6 +42,7 @@ GEM
     bcrypt (3.1.11-x64-mingw32)
     builder (3.2.2)
     byebug (9.0.5)
+    certified (1.0.0)
     coffee-rails (4.1.1)
       coffee-script (>= 2.2.0)
       railties (>= 4.0.0, < 5.1.x)
@@ -53,7 +54,7 @@ GEM
     debug_inspector (0.0.2)
     erubis (2.7.0)
     execjs (2.7.0)
-    gcm (0.1.1)
+    fcm (0.0.1)
       httparty
       json
     globalid (0.3.6)
@@ -158,8 +159,9 @@ PLATFORMS
 DEPENDENCIES
   bcrypt (~> 3.1.7)
   byebug
+  certified (~> 1.0)
   coffee-rails (~> 4.1.0)
-  gcm (~> 0.1.1)
+  fcm (~> 0.0.1)
   jbuilder (~> 2.0)
   jquery-rails
   mysql2 (>= 0.3.18, < 0.5)
