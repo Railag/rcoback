@@ -13,7 +13,7 @@ class GroupController < ApplicationController
   end
 
   def fetch
-    groups = Group.where(user_id: permitted_params[:creator])
+    groups = Group.where(user_id: permitted_params[:user_id])
 
     if groups.blank?
       render json: t(:group_fetch_error)
@@ -122,7 +122,7 @@ class GroupController < ApplicationController
 
   private
   def permitted_params
-    params.permit(:title, :creator)
+    params.permit(:title, :user_id)
   end
 
   private

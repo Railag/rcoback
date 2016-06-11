@@ -3,8 +3,4 @@ class User < ApplicationRecord
 
   has_many :groups
   has_many :group_users
-
-  def password
-    @password ||= Password.new(@password)
-  end
 end

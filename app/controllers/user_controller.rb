@@ -27,12 +27,17 @@ class UserController < ApplicationController
       return
     end
 
-    user = User.find_by(password: pass(params[:password]))
+    user = User.find_by(login: login_params[:login])
 
     if user.blank?
       render json: t(:user_login_not_found_error)
     else
-      render json: user_response(user)
+      stored_hash = BCrypt::Password.new(user.password)
+      if stored_hash == login_params[:password]
+        render json: user_response(user)
+      else
+        render json: t(:user_login_not_found_error)
+      end
     end
   end
 
@@ -67,14 +72,15 @@ class UserController < ApplicationController
   end
 
   def send_pn
-    fcm = FCM.new('AIzaSyCIaz5C9ertmcJ9DldIVMj7eTTsR6legRA', sender)
+    fcm = FCM.new('AIzaSyCitBfvTc5xAldfr4TrIjrEWS8EdI9_sCI')
     # you can set option parameters in here
     #  - all options are pass to HTTParty method arguments
     #  - ref: https://github.com/jnunemaker/httparty/blob/master/lib/httparty.rb#L29-L60
     #  fcm = FCM.new("my_api_key", timeout: 3)
 
-    registration_ids= ["duK2HDhnakg%3AAPA91bECzkTcBNjnUe4PRJlcIjFE87DEiCkqxoOe2lFpBP2luc2MTPkKU13s08FBHXifObh96n2-Ur92dHp4k3DSgY5QF4mvXLvSIHma4cjYewPQM71-3YpMSENYX90v-F9nlH1u8-rF",
-                       "13"] # an array of one or more client registration tokens
+    registration_ids= [
+        'cidPybiorOw:APA91bFz7x9RC2RbcC4AAeu9mtw1ganMk92beXjVZ5IghquG8-Jc5C1wiQTq4-aM0pWWEfXqoXMYaXy36tyPESBISVcGl17X_hduR5Otoejtn2_D9_eQBdkooaYuRQmjNJW9VhabVdUk'] # an array of one or more client registration tokens
+
     options = {data: {score: "123"}, collapse_key: "updated_score"}
     response = fcm.send(registration_ids, options)
     Rails.logger = Logger.new(STDOUT)
@@ -104,16 +110,16 @@ class UserController < ApplicationController
   end
 
   private
-  def pass(pass)
-    Password.create(pass).to_str
-  end
-
-  private
   def generate_authentication_token
     loop do
       params[:token] = SecureRandom.base64(64)
       break unless User.find_by(token: params[:token])
     end
+  end
+
+  private
+  def login_params
+    params.permit(:login, :password)
   end
 
 end
