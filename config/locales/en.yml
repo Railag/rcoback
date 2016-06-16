@@ -33,3 +33,6 @@ en:
   user_fcm_token_success: '{"result":"Token saved successfully"}'
   user_fcm_token_error: '{"error":"No user found for this token"}'
   pn_send_success: '{"result":"Notification sent"}'
+  user_pn_error_no_user: '{"error":"Error while sending notification"}'
+  fcm_key: 'AIzaSyCitBfvTc5xAldfr4TrIjrEWS8EdI9_sCI'
+  group_pn_error_no_group: '{"error":"Error while sending notification"}'

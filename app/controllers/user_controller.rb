@@ -1,7 +1,7 @@
 class UserController < ApplicationController
   include BCrypt
 
-  protect_from_forgery except: [:create, :login, :startup_login, :fcm_token, :send_pn]
+  protect_from_forgery except: [:create, :login, :startup_login, :fcm_token, :send_pns_to_everyone, :send_pns_to_group]
 
   before_action :generate_authentication_token, only: :create
   before_action :encrypt_password, only: :create
@@ -71,22 +71,77 @@ class UserController < ApplicationController
     end
   end
 
-  def send_pn
-    fcm = FCM.new('AIzaSyCitBfvTc5xAldfr4TrIjrEWS8EdI9_sCI')
+  def send_pns(registration_ids, options)
+    fcm = FCM.new(t(:fcm_key))
+
+    response = fcm.send(registration_ids, options)
+
+    Rails.logger = Logger.new(STDOUT)
+    logger.info(response)
+
+    render json: t(:pn_send_success)
+  end
+
+  def send_pns_to_everyone
     # you can set option parameters in here
     #  - all options are pass to HTTParty method arguments
     #  - ref: https://github.com/jnunemaker/httparty/blob/master/lib/httparty.rb#L29-L60
     #  fcm = FCM.new("my_api_key", timeout: 3)
 
-    registration_ids= [
-        'cidPybiorOw:APA91bFz7x9RC2RbcC4AAeu9mtw1ganMk92beXjVZ5IghquG8-Jc5C1wiQTq4-aM0pWWEfXqoXMYaXy36tyPESBISVcGl17X_hduR5Otoejtn2_D9_eQBdkooaYuRQmjNJW9VhabVdUk'] # an array of one or more client registration tokens
+    user_id = pn_params[:user_id]
+    title = pn_params[:title]
+    text = pn_params[:text]
 
-    options = {data: {score: "123"}, collapse_key: "updated_score"}
-    response = fcm.send(registration_ids, options)
-    Rails.logger = Logger.new(STDOUT)
-    logger.info(response)
+    user = User.find_by(id: user_id)
 
-    render json: t(:pn_send_success)
+    if user.blank?
+      render json: t(:user_pn_error_no_user)
+      return
+    end
+
+    registration_ids = fetch_all_fcm_tokens
+    #registration_ids= [
+    #    'cidPybiorOw:APA91bFz7x9RC2RbcC4AAeu9mtw1ganMk92beXjVZ5IghquG8-Jc5C1wiQTq4-aM0pWWEfXqoXMYaXy36tyPESBISVcGl17X_hduR5Otoejtn2_D9_eQBdkooaYuRQmjNJW9VhabVdUk'] # an array of one or more client registration tokens
+
+    options = {notification: {title: title, body: text}, data: {user: user.login}, collapse_key: "test_pn"}
+
+    send_pns(registration_ids, options)
+  end
+
+  def send_pns_to_group
+    group_id = group_pn_params[:group_id]
+    title = pn_params[:title]
+    text = pn_params[:text]
+
+    group = Group.find_by(id: group_id)
+
+    if group.blank?
+      render json: t(:group_pn_error_no_group)
+      return
+    end
+
+    group_users_ids = group.group_users.map(&:user_id)
+
+    registration_ids = User.where(id: group_users_ids).map(&:fcm_token)
+
+    options = {notification: {title: title, body: text}, data: {group: group.name}, collapse_key: "group_pn"}
+
+    send_pns(registration_ids, options)
+  end
+
+  private
+  def fetch_all_fcm_tokens
+    User.select(:fcm_token).map(&:fcm_token)
+  end
+
+  private
+  def pn_params # TODO more params
+    params.permit(:user_id, :title, :text)
+  end
+
+  private
+  def group_pn_params
+    params.permit(:group_id, :title, :text)
   end
 
   private
