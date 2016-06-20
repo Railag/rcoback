@@ -10,6 +10,8 @@ Rails.application.routes.draw do
     post '/send_message', action: 'send_message'
     post '/add_user', action: 'add_user'
     post '/remove_user', action: 'remove_user'
+    post '/start_call', action: 'start_call'
+    post '/invite_to_call', action: 'invite_to_call'
     post '/', action: 'create'
     put '/:id', action: 'update'
     delete '/:id', action: 'destroy'

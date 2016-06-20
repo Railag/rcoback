@@ -36,3 +36,4 @@ en:
   user_pn_error_no_user: '{"error":"Error while sending notification"}'
   fcm_key: 'AIzaSyCitBfvTc5xAldfr4TrIjrEWS8EdI9_sCI'
   group_pn_error_no_group: '{"error":"Error while sending notification"}'
+  group_port_busy_error: '{"error":"No available rooms"}'

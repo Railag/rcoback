@@ -1,6 +1,6 @@
 class GroupController < ApplicationController
-  protect_from_forgery except: [:create, :fetch, :fetch_users, :fetch_messages, :send_message]
-  #require 'fcm'
+  protect_from_forgery except: [:create, :fetch, :fetch_users, :fetch_messages, :send_message, :start_call, :invite_to_call]
+
 
   def create
     begin
@@ -111,6 +111,91 @@ class GroupController < ApplicationController
     render json: t(:group_send_message_success)
   end
 
+  def start_call
+    creator_id = start_call_params[:user_id]
+
+    group = Group.find_by(user_id: creator_id)
+
+    if group.blank?
+      render json: t(:group_pn_error_no_group)
+      return
+    end
+
+    # start Node.js signalling server
+    port = get_free_port
+    if port.blank?
+      render json: t(:group_port_busy_error)
+      return
+    end
+
+    #fork { exec("set PORT=#{port} & forever start ./webrtc-server/app.js") }
+
+    # TODO handle pid
+    pid = spawn "set PORT=#{port} & start forever start ./webrtc-server/app.js"
+
+    ip = Socket.ip_address_list.detect(&:ipv4_private?).try(:ip_address)
+
+    render json: "{\"host\":\"http://#{ip}:#{port}\"}"
+
+  end
+
+  def get_free_port
+
+    3001.upto(3100) do |port|
+      puts port
+      result = `netstat -na | findstr "port"`
+      if result.blank?
+        return port
+      end
+
+    end
+  end
+
+  def invite_to_call
+    creator_id = invite_to_call_params[:user_id]
+
+    group = Group.find_by(user_id: creator_id)
+
+    if group.blank?
+      render json: t(:group_pn_error_no_group)
+      return
+    end
+
+    group_users_ids = group.group_users.map(&:user_id)
+
+    registration_ids = User.where(id: group_users_ids).map(&:fcm_token)
+
+    title = "Join #{group.title} call!"
+
+    body = invite_to_call_params[:socket_address] + invite_to_call_params[:call_id]
+
+    options = {notification: {title: title, body: body}, data: {group: group.title}, collapse_key: 'invite_call_pn'}
+
+    send_pns(registration_ids, options)
+  end
+
+  def send_pns(registration_ids, options)
+    fcm = FCM.new(t(:fcm_key))
+
+    response = fcm.send(registration_ids, options)
+
+    Rails.logger = Logger.new(STDOUT)
+    logger.info(response)
+
+    render json: t(:pn_send_success)
+  end
+
+  private
+  def start_call_params
+    params.permit(:user_id)
+  end
+
+  private
+  def invite_to_call_params
+    params.permit(:user_id, :socket_address, :call_id)
+  end
+
+  private
   def message_params
     params.permit(:group_id, :user_id, :text)
   end
