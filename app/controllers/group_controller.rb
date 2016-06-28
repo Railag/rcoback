@@ -1,6 +1,9 @@
 class GroupController < ApplicationController
-  protect_from_forgery except: [:create, :fetch, :fetch_users, :fetch_messages, :send_message, :start_call, :invite_to_call]
+  protect_from_forgery except: [:create, :fetch, :fetch_users, :fetch_messages, :send_message, :start_call, :invite_to_call, :add_user, :add_invite_user]
 
+  # PN codes
+  PN_GROUP_INVITE = 1
+  PN_GROUP_CALL = 2
 
   def create
     begin
@@ -13,7 +16,8 @@ class GroupController < ApplicationController
   end
 
   def fetch
-    groups = Group.where(user_id: permitted_params[:user_id])
+    user_id = permitted_params[:user_id]
+    groups = Group.get_user_groups(user_id)
 
     if groups.blank?
       render json: t(:group_fetch_error)
@@ -22,11 +26,11 @@ class GroupController < ApplicationController
     end
   end
 
-  def add_user
-    group_id = params_for_add_user[:group_id]
+  def add_invite_user
+    group_id = params_for_add_user_invite[:group_id]
     group = Group.find_by(id: group_id)
 
-    login = params_for_add_user[:user_login_or_email]
+    login = params_for_add_user_invite[:user_login_or_email]
     user = User.find_by(login: login)
 
     if user.blank? # TODO add email user search
@@ -36,14 +40,33 @@ class GroupController < ApplicationController
 
     existing_user = GroupUser.find_by(user_id: user.id, group_id: group_id)
     if existing_user.blank?
-      group_user = GroupUser.create(user_id: user.id, group_id: group_id)
-      group.group_users << group_user
-      render json: t(:group_add_user_success)
+      registration_id = User.where(id: user.id).map(&:fcm_token)
+
+      title = "Join #{group.title}!"
+
+      options = {notification: {title: title}, data: {group: group.title, data: group.id.to_s, code: PN_GROUP_INVITE}, collapse_key: 'invite_group_pn'}
+
+      send_pns(registration_id, options)
+      render json: t(:group_add_user_invite_success)
     else
       render json: t(:group_add_user_error)
     end
 
     # TODO create PN and send email for this user with join/reject options for invitation
+  end
+
+  def add_user
+    user_id = params_for_add_user[:user_id]
+    group_id = params_for_add_user[:group_id]
+
+    # TODO verify
+    invite_token = params_for_add_user[:invite_token]
+
+    group = Group.find_by(id: group_id)
+
+    group_user = GroupUser.create(user_id: user_id, group_id: group_id)
+    group.group_users << group_user
+    render json: t(:group_add_user_success)
   end
 
   def remove_user
@@ -65,8 +88,6 @@ class GroupController < ApplicationController
     else
       render json: t(:group_remove_user_error)
     end
-
-    # TODO create PN and send email for this user with join/reject options for invitation
   end
 
   def fetch_users
@@ -169,9 +190,11 @@ class GroupController < ApplicationController
 
     body = invite_to_call_params[:socket_address] + invite_to_call_params[:call_id]
 
-    options = {notification: {title: title, body: body}, data: {group: group.title}, collapse_key: 'invite_call_pn'}
+    options = {notification: {title: title, body: body}, data: {group: group.title, data: body, code: PN_GROUP_CALL}, collapse_key: 'invite_call_pn'}
 
     send_pns(registration_ids, options)
+
+    render json: t(:pn_send_success)
   end
 
   def send_pns(registration_ids, options)
@@ -182,7 +205,7 @@ class GroupController < ApplicationController
     Rails.logger = Logger.new(STDOUT)
     logger.info(response)
 
-    render json: t(:pn_send_success)
+    #  render json: t(:pn_send_success)
   end
 
   private
@@ -211,8 +234,13 @@ class GroupController < ApplicationController
   end
 
   private
-  def params_for_add_user
+  def params_for_add_user_invite
     params.permit(:user_login_or_email, :group_id)
+  end
+
+  private
+  def params_for_add_user
+    params.permit(:user_id, :group_id, :invite_token)
   end
 
   private
