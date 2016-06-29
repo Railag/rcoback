@@ -47,6 +47,9 @@ class GroupController < ApplicationController
       options = {notification: {title: title}, data: {group: group.title, data: group.id.to_s, code: PN_GROUP_INVITE}, collapse_key: 'invite_group_pn'}
 
       send_pns(registration_id, options)
+
+      InviteMailer.invite_email(user).deliver_now
+
       render json: t(:group_add_user_invite_success)
     else
       render json: t(:group_add_user_error)
@@ -188,7 +191,8 @@ class GroupController < ApplicationController
 
     title = "Join #{group.title} call!"
 
-    body = invite_to_call_params[:socket_address] + invite_to_call_params[:call_id]
+    # host#caller_id
+    body = invite_to_call_params[:socket_address] + '#' + invite_to_call_params[:call_id]
 
     options = {notification: {title: title, body: body}, data: {group: group.title, data: body, code: PN_GROUP_CALL}, collapse_key: 'invite_call_pn'}
 
